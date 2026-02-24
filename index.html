@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Anneaux cassables</title>
+    <style>
+      /* 1. Base et réinitialisation */
+      body {
+        margin: 0;
+        background: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+        font-family: "Arial", Arial, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: none;
+      }
+
+      canvas {
+        background: radial-gradient(circle at center, #222 0%, #000 100%);
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      /* 2. Interface (HUD) */
+      #hud {
+        position: absolute;
+        top: env(safe-area-inset-top, 20px);
+        left: 20px;
+        color: #fff;
+        font-size: 24px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+
+      /* Bouton Son */
+      #soundBtn {
+        pointer-events: auto;
+        font-size: 16px;
+        padding: 8px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        background: rgba(68, 68, 68, 0.5);
+        color: #fff;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+      }
+
+      /* 3. Contrôles Mobiles (Boutons Géants) */
+      .mobile-controls {
+        position: fixed;
+        bottom: 40px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 30px;
+        box-sizing: border-box;
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      .mobile-btn {
+        pointer-events: auto;
+        width: 120px;
+        height: 120px;
+        font-size: 45px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        background: rgba(40, 40, 40, 0.8);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+
+        transition:
+          transform 0.1s ease,
+          background 0.2s ease;
+      }
+
+      /* Effet visuel immédiat lors du toucher */
+      .mobile-btn:active {
+        transform: scale(1.15);
+        background: rgba(100, 100, 100, 0.9);
+        border-color: #fff;
+      }
+
+      /* 4. Panneau de Victoire */
+      #winPanel {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 40px;
+        border-radius: 20px;
+        border: 2px solid #fff;
+        z-index: 2000;
+        width: 80%;
+        max-width: 400px;
+      }
+
+      #winPanel h1 {
+        margin: 0;
+        font-size: 32px;
+      }
+      #winPanel p {
+        font-size: 24px;
+      }
+
+      #replayBtn {
+        font-size: 22px;
+        padding: 15px 30px;
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      /* 5. Ajustements spécifiques pour petits écrans */
+      @media (max-width: 480px) {
+        .mobile-btn {
+          width: 110px;
+          height: 110px;
+        }
+        #hud {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div style="font-size: 25px">⏱ Temps : <span id="timer">0.0</span>s</div>
+      <div style="font-size: 25px">🏆 Score : <span id="score">0</span></div>
+      <button id="soundBtn">🔊 Son : ON</button>
+    </div>
+    <div class="mobile-controls">
+      <button id="leftBtn" class="mobile-btn">◀</button>
+      <button id="rightBtn" class="mobile-btn">▶</button>
+    </div>
+    <div id="winPanel" style="display: none">
+      <h1>🎉 Bien joué ! 🎉</h1>
+      <p>Temps : <span id="finalTime">0.0</span>s</p>
+      <button id="replayBtn">Rejouer</button>
+    </div>
+
+    <canvas id="canvas" width="1000" height="1000"></canvas>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const winPanel = document.getElementById("winPanel");
+      const finalTime = document.getElementById("finalTime");
+      let gameWon = false;
+      const replayBtn = document.getElementById("replayBtn");
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      const gravity = 0.12;
+      const friction = 1;
+      const bounceLoss = 1;
+
+      const delay = 50;
+      const maxBalls = 1;
+      const nb_max_de_rbnd = 200;
+      const initialSpeed = 7;
+      const directionAngle = 2.1;
+
+      const balls = [];
+      let particles = [];
+      let touchKeys = {
+        left: false,
+        right: false,
+      };
+
+      const leftBtn = document.getElementById("leftBtn");
+      const rightBtn = document.getElementById("rightBtn");
+
+      if (leftBtn && rightBtn) {
+        // Fonction générique pour éviter la répétition
+        const handleTouch = (e, key, state) => {
+          e.preventDefault(); // BLOQUE le menu contextuel et le comportement moteur du navigateur
+          touchKeys[key] = state;
+        };
+
+        leftBtn.addEventListener(
+          "touchstart",
+          (e) => handleTouch(e, "left", true),
+          { passive: false },
+        );
+        leftBtn.addEventListener("touchend", (e) =>
+          handleTouch(e, "left", false),
+        );
+        leftBtn.addEventListener("touchcancel", (e) =>
+          handleTouch(e, "left", false),
+        );
+
+        rightBtn.addEventListener(
+          "touchstart",
+          (e) => handleTouch(e, "right", true),
+          { passive: false },
+        );
+        rightBtn.addEventListener("touchend", (e) =>
+          handleTouch(e, "right", false),
+        );
+        rightBtn.addEventListener("touchcancel", (e) =>
+          handleTouch(e, "right", false),
+        );
+      }
+
+      // ===== ANNEAUX =====
+      const ringCount = 10;
+      const ringSpacing = 30;
+      const ringWidth = 6;
+      const gapSize = Math.PI / 6;
+      let rotationSpeed = 0;
+      const rotationAcceleration = 0.001;
+      const maxRotationSpeed = 0.03;
+
+      let rings = [];
+      let score = 0;
+      let startTime = Date.now();
+      let soundEnabled = true;
+      const soundBtn = document.getElementById("soundBtn");
+
+      soundBtn.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = `🔊 Son : ${soundEnabled ? "ON" : "OFF"}`;
+      });
+
+      const timerElement = document.getElementById("timer");
+      const scoreElement = document.getElementById("score");
+
+      for (let i = 0; i < ringCount; i++) {
+        rings.push({
+          radius: 150 + i * ringSpacing,
+          angle: Math.random() * Math.PI * 2,
+          broken: false,
+        });
+      }
+
+      let keys = {
+        left: false,
+        right: false,
+      };
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") keys.left = true;
+        if (e.key === "ArrowRight") keys.right = true;
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if (e.key === "ArrowLeft") keys.left = false;
+        if (e.key === "ArrowRight") keys.right = false;
+      });
+
+      // ===== SON =====
+      const bounceSound = new Audio("bounce.mp3");
+      bounceSound.preload = "auto";
+      bounceSound.volume = 0.3;
+
+      // ===== GRADIENT COULEURS =====
+      const gradientColors = [
+        [0, 255, 0],
+        [255, 255, 0],
+        [255, 165, 0],
+        [255, 0, 0],
+        [255, 0, 255],
+        [148, 0, 211],
+        [0, 0, 255],
+        [0, 120, 255],
+      ];
+
+      function lerpColorRGB(a, b, t) {
+        return [
+          Math.round(a[0] + (b[0] - a[0]) * t),
+          Math.round(a[1] + (b[1] - a[1]) * t),
+          Math.round(a[2] + (b[2] - a[2]) * t),
+        ];
+      }
+
+      function createBall() {
+        return {
+          x: centerX,
+          y: centerY,
+          radius: 14,
+          vx: Math.cos(directionAngle) * initialSpeed,
+          vy: Math.sin(directionAngle) * initialSpeed,
+          trail: [],
+          bounces: 0,
+          colorIndex: 0,
+          colorProgress: 0,
+          color: [...gradientColors[0]],
+        };
+      }
+
+      setInterval(() => {
+        if (balls.length < maxBalls) balls.push(createBall());
+      }, delay);
+
+      function update() {
+        // Rotation des anneaux
+        // Gestion de l'accélération
+        if (keys.left || touchKeys.left) rotationSpeed += rotationAcceleration;
+        if (keys.right || touchKeys.right)
+          rotationSpeed -= rotationAcceleration;
+
+        // Limite de vitesse
+        rotationSpeed = Math.max(
+          -maxRotationSpeed,
+          Math.min(maxRotationSpeed, rotationSpeed),
+        );
+
+        // Accélération
+        if (keys.left || touchKeys.left) rotationSpeed += rotationAcceleration;
+        if (keys.right || touchKeys.right)
+          rotationSpeed -= rotationAcceleration;
+
+        // Limite de vitesse
+        rotationSpeed = Math.max(
+          -maxRotationSpeed,
+          Math.min(maxRotationSpeed, rotationSpeed),
+        );
+        rotationSpeed *= 0.97;
+
+        if (Math.abs(rotationSpeed) < 0.0001) {
+          rotationSpeed = 0;
+        }
+
+        // Application aux anneaux
+        rings.forEach((ring) => {
+          if (!ring.broken) {
+            ring.angle += rotationSpeed;
+          }
+        });
+
+        balls.forEach((ball) => {
+          ball.vy += gravity;
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+          ball.vx *= friction;
+          ball.vy *= friction;
+
+          const dx = ball.x - centerX;
+          const dy = ball.y - centerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          rings.forEach((ring) => {
+            if (ring.broken) return;
+
+            if (
+              distance + ball.radius > ring.radius &&
+              distance - ball.radius < ring.radius + ringWidth
+            ) {
+              let ballAngle = Math.atan2(dy, dx);
+              if (ballAngle < 0) ballAngle += Math.PI * 2;
+
+              let gapStart = ring.angle % (Math.PI * 2);
+              if (gapStart < 0) gapStart += Math.PI * 2;
+
+              let gapEnd = gapStart + gapSize;
+
+              // Gestion correcte si l'ouverture dépasse 2π
+              let inGap = false;
+
+              if (gapEnd <= Math.PI * 2) {
+                // cas normal
+                inGap = ballAngle >= gapStart && ballAngle <= gapEnd;
+              } else {
+                // cas où l'ouverture traverse 0
+                inGap =
+                  ballAngle >= gapStart || ballAngle <= gapEnd - Math.PI * 2;
+              }
+
+              if (inGap) {
+                ring.broken = true;
+                createExplosion(ring);
+                score++;
+                scoreElement.textContent = score;
+              } else {
+                const nx = dx / distance;
+                const ny = dy / distance;
+                const dot = ball.vx * nx + ball.vy * ny;
+
+                ball.vx -= 2 * dot * nx;
+                ball.vy -= 2 * dot * ny;
+
+                ball.x = centerX + nx * (ring.radius - ball.radius);
+                ball.y = centerY + ny * (ring.radius - ball.radius);
+
+                if (soundEnabled) {
+                  const soundClone = bounceSound.cloneNode();
+                  soundClone.play();
+                }
+
+                ball.colorProgress += 0.2;
+                if (ball.colorProgress >= 1) {
+                  ball.colorProgress = 0;
+                  ball.colorIndex++;
+                  if (ball.colorIndex >= gradientColors.length - 1) {
+                    ball.colorIndex = gradientColors.length - 2;
+                  }
+                }
+
+                ball.color = lerpColorRGB(
+                  gradientColors[ball.colorIndex],
+                  gradientColors[ball.colorIndex + 1],
+                  ball.colorProgress,
+                );
+              }
+            }
+          });
+
+          // Traînée
+          ball.trail.push({ x: ball.x, y: ball.y });
+          if (ball.trail.length > 15) ball.trail.shift();
+
+          if (ball.bounces >= nb_max_de_rbnd) {
+            balls.splice(balls.indexOf(ball), 1);
+          }
+        });
+        // Mise à jour particules
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.05; // petite gravité
+          p.life--;
+        });
+        if (!gameWon && rings.every((r) => r.broken)) {
+          gameWon = true;
+          finalTime.textContent = ((Date.now() - startTime) / 1000).toFixed(1);
+          winPanel.style.display = "block";
+        }
+        let elapsed = (Date.now() - startTime) / 1000;
+
+        if (!gameWon) {
+          timerElement.textContent = elapsed.toFixed(1);
+        } else {
+          timerElement.textContent = elapsed.toFixed(1);
+        }
+
+        particles = particles.filter((p) => p.life > 0);
+        timerElement.textContent = elapsed.toFixed(1);
+      }
+
+      function createExplosion(ring) {
+        const particleCount = 40;
+
+        for (let i = 0; i < particleCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 4 + 1;
+
+          particles.push({
+            x: centerX + Math.cos(angle) * ring.radius,
+            y: centerY + Math.sin(angle) * ring.radius,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 80,
+            size: Math.random() * 4 + 2,
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Dessin particules
+        particles.forEach((p) => {
+          ctx.globalAlpha = p.life / 60;
+          ctx.save();
+
+          ctx.globalAlpha = p.life / 80;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = "white";
+
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        });
+
+        ctx.globalAlpha = 1;
+
+        // Dessin des anneaux
+        rings.forEach((ring) => {
+          if (ring.broken) return;
+
+          ctx.beginPath();
+          ctx.arc(
+            centerX,
+            centerY,
+            ring.radius,
+            ring.angle + gapSize,
+            ring.angle + Math.PI * 2,
+          );
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = ringWidth;
+          ctx.stroke();
+        });
+
+        balls.forEach((ball) => {
+          // Traînée
+          ball.trail.forEach((pos, i) => {
+            const alpha = (i / ball.trail.length) * 0.4;
+            ctx.fillStyle = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, ball.radius * (alpha * 1.2), 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Balle
+          ctx.save();
+
+          ctx.shadowBlur = 25;
+          ctx.shadowColor = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
+
+          ctx.fillStyle = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        });
+      }
+
+      function animate() {
+        update();
+        draw();
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+      replayBtn.addEventListener("click", () => {
+        // Reset des anneaux
+        rings.forEach((ring, i) => {
+          ring.broken = false;
+          ring.angle = Math.random() * Math.PI * 2;
+        });
+
+        // Reset des balles
+        balls.length = 0;
+
+        // Reset particules
+        particles.length = 0;
+
+        // Reset score et chrono
+        score = 0;
+        scoreElement.textContent = score;
+        startTime = Date.now();
+        gameWon = false;
+
+        // Cacher le panneau
+        winPanel.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
