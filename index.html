@@ -2,9 +2,8 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <title>Anneaux cassables</title>
+    <title>Bouncy Ball</title>
     <style>
-      /* 1. Base et réinitialisation */
       body {
         margin: 0;
         background: #111;
@@ -13,13 +12,12 @@
         align-items: center;
         height: 100vh;
         overflow: hidden;
-        font-family: "Arial", Arial, sans-serif;
+        font-family: Arial, sans-serif;
         -webkit-user-select: none;
         user-select: none;
         -webkit-touch-callout: none;
         touch-action: none;
       }
-
       canvas {
         background: radial-gradient(circle at center, #222 0%, #000 100%);
         display: block;
@@ -27,7 +25,7 @@
         max-height: 100%;
       }
 
-      /* 2. Interface (HUD) */
+      /* HUD */
       #hud {
         position: absolute;
         top: env(safe-area-inset-top, 20px);
@@ -40,21 +38,23 @@
         gap: 10px;
         pointer-events: none;
       }
-
-      /* Bouton Son */
       #soundBtn {
         pointer-events: auto;
         font-size: 16px;
         padding: 8px 15px;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 5px;
+        border-radius: 10px;
         background: rgba(68, 68, 68, 0.5);
         color: #fff;
         cursor: pointer;
         backdrop-filter: blur(5px);
       }
+      #soundBtn:hover {
+        background: #3c3c3c;
+        border-color: rgba(255, 255, 255, 0.5);
+      }
 
-      /* 3. Contrôles Mobiles (Boutons Géants) */
+      /* Contrôles mobiles */
       .mobile-controls {
         position: fixed;
         bottom: 40px;
@@ -67,37 +67,34 @@
         pointer-events: none;
         z-index: 1000;
       }
-
       .mobile-btn {
         pointer-events: auto;
-        width: 120px;
-        height: 120px;
-        font-size: 45px;
+        width: 150px;
+        height: 150px;
+        font-size: 60px;
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 50%;
         background: rgba(40, 40, 40, 0.8);
-        color: #ffffff;
+        color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         outline: none;
-
         transition:
           transform 0.1s ease,
           background 0.2s ease;
       }
-
-      /* Effet visuel immédiat lors du toucher */
       .mobile-btn:active {
         transform: scale(1.15);
         background: rgba(100, 100, 100, 0.9);
         border-color: #fff;
       }
 
-      /* 4. Panneau de Victoire */
-      #winPanel {
+      /* Panneaux */
+      #winPanel,
+      #startPanel {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -112,27 +109,225 @@
         width: 80%;
         max-width: 400px;
       }
-
-      #winPanel h1 {
+      #winPanel h1,
+      #startPanel h1 {
         margin: 0;
         font-size: 32px;
       }
-      #winPanel p {
+      #winPanel p,
+      #startPanel p {
         font-size: 24px;
       }
 
-      #replayBtn {
+      /* Boutons principaux */
+      #replayBtn,
+      #startBtn {
+        font-weight: bold;
         font-size: 22px;
         padding: 15px 30px;
-        background: #27ae60;
+        background: #278eae;
         color: white;
-        border: none;
-        border-radius: 10px;
+        border: 2px solid white;
+        border-radius: 15px;
         cursor: pointer;
         margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      #replayBtn:hover,
+      #startBtn:hover {
+        background: #32a3c5;
       }
 
-      /* 5. Ajustements spécifiques pour petits écrans */
+      /* Bouton alphabet */
+      #alphabetBtn {
+        font-weight: bold;
+        font-size: 22px;
+        padding: 15px 30px;
+        background: linear-gradient(135deg, #f5a623, #f0c040, #c8860a);
+        color: #3b1f00;
+        border: 2px solid #f0c040;
+        border-radius: 15px;
+        cursor: pointer;
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+      #alphabetBtn:hover {
+        background: linear-gradient(135deg, #f0c040, #ffe066, #f5a623);
+      }
+
+      /* Boutons difficulté */
+      .diffBtnEasy {
+        font-weight: bold;
+        display: block;
+        width: 100%;
+        font-size: 22px;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        background-color: rgb(21, 162, 21);
+        color: black;
+        border: 1px solid white;
+      }
+      .diffBtnEasy:hover {
+        background: #2c8513;
+      }
+
+      .diffBtnMedium {
+        font-weight: bold;
+        display: block;
+        width: 100%;
+        font-size: 22px;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        background-color: rgb(228, 136, 31);
+        color: black;
+        border: 1px solid white;
+      }
+      .diffBtnMedium:hover {
+        background: #a65f0e;
+      }
+
+      .diffBtnHard {
+        font-weight: bold;
+        display: block;
+        width: 100%;
+        font-size: 22px;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        background-color: rgb(231, 41, 41);
+        color: black;
+        border: 1px solid white;
+      }
+      .diffBtnHard:hover {
+        background: #851919;
+      }
+
+      .flying-coin {
+        position: fixed;
+        font-size: 24px;
+        pointer-events: none;
+        z-index: 99999;
+        transition: none;
+        animation: none;
+      }
+
+      /* Bouton son écran accueil */
+      #startSoundBtn {
+        pointer-events: auto;
+        font-size: 16px;
+        padding: 8px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        background: rgba(68, 68, 68, 0.5);
+        color: #fff;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        margin-top: 20px;
+      }
+      #startSoundBtn:hover {
+        background: #3c3c3c;
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      /* ===================== PIÈCES ===================== */
+
+      /* Affichage pièces sur écran d'accueil */
+      #coinDisplay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 22px;
+        font-weight: bold;
+        color: #f0c040;
+        background: rgba(240, 192, 64, 0.12);
+        border: 2px solid rgba(240, 192, 64, 0.4);
+        border-radius: 30px;
+        padding: 8px 20px;
+        margin: 12px auto 0 auto;
+        width: fit-content;
+      }
+      #coinDisplay .coin-icon {
+        font-size: 26px;
+        animation: coinSpin 2.5s linear infinite;
+      }
+      @keyframes coinSpin {
+        0% {
+          transform: rotateY(0deg);
+        }
+        45% {
+          transform: rotateY(90deg);
+        }
+        50% {
+          transform: rotateY(90deg);
+        }
+        95% {
+          transform: rotateY(0deg);
+        }
+        100% {
+          transform: rotateY(0deg);
+        }
+      }
+
+      /* Bouton récupérer récompense */
+      #claimRewardBtn {
+        display: none;
+        font-weight: bold;
+        font-size: 17px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #f5a623, #f0c040, #c8860a);
+        color: #3b1f00;
+        border: 2px solid #f0c040;
+        border-radius: 15px;
+        cursor: pointer;
+        margin-top: 12px;
+        animation: pulseGold 1.5s ease-in-out infinite;
+      }
+      #claimRewardBtn:hover {
+        background: linear-gradient(135deg, #ffe066, #f5a623);
+        transform: scale(1.04);
+      }
+      @keyframes pulseGold {
+        0%,
+        100% {
+          box-shadow: 0 0 8px rgba(240, 192, 64, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 22px rgba(240, 192, 64, 0.95);
+        }
+      }
+
+      /* Toast notification pièces gagnées */
+      #coinToast {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-80px);
+        background: linear-gradient(135deg, #f5a623, #f0c040);
+        color: #3b1f00;
+        font-size: 20px;
+        font-weight: bold;
+        padding: 12px 28px;
+        border-radius: 30px;
+        border: 2px solid #c8860a;
+        z-index: 9999;
+        pointer-events: none;
+        transition:
+          transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.4s ease;
+        opacity: 0;
+        box-shadow: 0 4px 20px rgba(240, 192, 64, 0.5);
+      }
+      #coinToast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
       @media (max-width: 480px) {
         .mobile-btn {
           width: 110px;
@@ -142,434 +337,936 @@
           font-size: 20px;
         }
       }
+      @media (min-width: 768px) {
+        .mobile-btn {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="hud">
+    <!-- HUD en jeu -->
+    <div id="hud" style="display: none">
+      <div style="font-size: 40px; margin-top: 30px; margin-bottom: 30px">
+        Bouncy Ball ⚾
+      </div>
       <div style="font-size: 25px">⏱ Temps : <span id="timer">0.0</span>s</div>
       <div style="font-size: 25px">🏆 Score : <span id="score">0</span></div>
       <button id="soundBtn">🔊 Son : ON</button>
+      <div style="font-size: 25px">
+        🛡️ Bonus : <span id="bonusDisplay">—</span>
+      </div>
     </div>
-    <div class="mobile-controls">
+
+    <!-- Contrôles mobiles -->
+    <div class="mobile-controls" style="display: none">
       <button id="leftBtn" class="mobile-btn">◀</button>
       <button id="rightBtn" class="mobile-btn">▶</button>
     </div>
+
+    <!-- Panneau victoire -->
     <div id="winPanel" style="display: none">
       <h1>🎉 Bien joué ! 🎉</h1>
       <p>Temps : <span id="finalTime">0.0</span>s</p>
+      <div id="alphabetChallenge" style="display: none">
+        <p style="font-size: 18px">Tu te souviens des lettres ?</p>
+        <input
+          id="letterInput"
+          type="text"
+          placeholder="Tape les lettres..."
+          style="
+            font-size: 22px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 10px;
+            border: 2px solid white;
+            background: #222;
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+          "
+        />
+      </div>
       <button id="replayBtn">Rejouer</button>
+      <p
+        id="resultMsg"
+        style="font-size: 22px; margin-top: 10px; display: none"
+      ></p>
+      <button id="claimRewardBtn">
+        🪙 Récupérer la récompense (+10 pièces)
+      </button>
     </div>
 
-    <canvas id="canvas" width="1000" height="1000"></canvas>
+    <!-- Écran d'accueil -->
+    <div id="startPanel">
+      <p style="font-size: 55px; font-weight: bold; margin: 0">Bouncy Ball</p>
+      <p>Prêt à casser des anneaux ?</p>
+      <p>⚠️ Attention aux pièges !</p>
+
+      <!-- Affichage des pièces -->
+      <div id="coinDisplay">
+        <span class="coin-icon">🪙</span>
+        <span id="coinCount">0</span> pièces
+      </div>
+
+      <button id="startBtn">Commencer</button>
+      <br />
+      <button id="alphabetBtn" data-level="facile">Mode Alphabet</button>
+      <button class="diffBtnEasy diffBtn" data-level="facile">Facile</button>
+      <button class="diffBtnMedium diffBtn" data-level="moyen">Moyen</button>
+      <button class="diffBtnHard diffBtn" data-level="difficile">
+        Difficile
+      </button>
+      <br />
+      <button id="startSoundBtn">🔊 Son : ON</button>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="coinToast">🪙 +10 pièces !</div>
+
+    <canvas
+      id="canvas"
+      width="1000"
+      height="1000"
+      style="display: none"
+    ></canvas>
 
     <script>
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
-      const winPanel = document.getElementById("winPanel");
-      const finalTime = document.getElementById("finalTime");
-      let gameWon = false;
-      const replayBtn = document.getElementById("replayBtn");
+      // =====================================================================
+      // VARIABLES GLOBALES
+      // =====================================================================
 
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
-      const gravity = 0.12;
-      const friction = 1;
-      const bounceLoss = 1;
-
-      const delay = 50;
-      const maxBalls = 1;
-      const nb_max_de_rbnd = 200;
-      const initialSpeed = 7;
-      const directionAngle = 2.1;
-
-      const balls = [];
-      let particles = [];
-      let touchKeys = {
-        left: false,
-        right: false,
-      };
-
-      const leftBtn = document.getElementById("leftBtn");
-      const rightBtn = document.getElementById("rightBtn");
-
-      if (leftBtn && rightBtn) {
-        // Fonction générique pour éviter la répétition
-        const handleTouch = (e, key, state) => {
-          e.preventDefault(); // BLOQUE le menu contextuel et le comportement moteur du navigateur
-          touchKeys[key] = state;
-        };
-
-        leftBtn.addEventListener(
-          "touchstart",
-          (e) => handleTouch(e, "left", true),
-          { passive: false },
-        );
-        leftBtn.addEventListener("touchend", (e) =>
-          handleTouch(e, "left", false),
-        );
-        leftBtn.addEventListener("touchcancel", (e) =>
-          handleTouch(e, "left", false),
-        );
-
-        rightBtn.addEventListener(
-          "touchstart",
-          (e) => handleTouch(e, "right", true),
-          { passive: false },
-        );
-        rightBtn.addEventListener("touchend", (e) =>
-          handleTouch(e, "right", false),
-        );
-        rightBtn.addEventListener("touchcancel", (e) =>
-          handleTouch(e, "right", false),
-        );
-      }
-
-      // ===== ANNEAUX =====
-      const ringCount = 10;
+      // Anneaux
+      let ringCount = 10;
       const ringSpacing = 30;
       const ringWidth = 6;
-      const gapSize = Math.PI / 6;
+      let gapSize = Math.PI / 6;
+
+      // Rotation
       let rotationSpeed = 0;
       const rotationAcceleration = 0.001;
       const maxRotationSpeed = 0.03;
 
+      // Zoom
+      let currentZoom = 1;
+      const zoomMin = 0.4;
+
+      // Bonus
+      const probabonus = 0.0015;
+      let bonusActive = false;
+      let bonusTimer = 0;
+      const bonusDuration = 300;
+
+      // Mode alphabet
+      let alphabetMode = false;
+      let currentLetter = "";
+      let letterTimer = 0;
+      const letterDuration = 120;
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      let lettersHistory = [];
+      const wordList = [
+        "ARBRES",
+        "BALLON",
+        "CAHIER",
+        "DANSER",
+        "ETOILE",
+        "FLEURS",
+        "GIRAFE",
+        "HIBOUX",
+        "IMAGES",
+        "JARDIN",
+        "LACETS",
+        "ORANGE",
+        "NUAGES",
+        "NATURE",
+        "PIERRE",
+        "RAISIN",
+        "SOLEIL",
+        "TAILLE",
+        "VAGUES",
+        "WAGONS",
+        "OEUVRE",
+        "PIANOS",
+        "TIGRES",
+        "CHIENS",
+        "MOUTON",
+        "MIROIR",
+        "CARTON",
+        "BOUGIE",
+        "LETTRE",
+        "CHAISE",
+      ];
+      let currentWord = "";
+      let currentWordIndex = 0;
+
+      // État général
       let rings = [];
       let score = 0;
       let startTime = Date.now();
-      let soundEnabled = true;
-      const soundBtn = document.getElementById("soundBtn");
+      let difficulty_level = "facile";
+      let trapProbability = 0.5;
 
-      soundBtn.addEventListener("click", () => {
-        soundEnabled = !soundEnabled;
-        soundBtn.textContent = `🔊 Son : ${soundEnabled ? "ON" : "OFF"}`;
-      });
+      // =====================================================================
+      // SYSTÈME DE PIÈCES
+      // =====================================================================
 
-      const timerElement = document.getElementById("timer");
-      const scoreElement = document.getElementById("score");
+      function getCoins() {
+        return parseInt(localStorage.getItem("bouncyBallCoins") || "0", 10);
+      }
 
-      for (let i = 0; i < ringCount; i++) {
-        rings.push({
-          radius: 150 + i * ringSpacing,
-          angle: Math.random() * Math.PI * 2,
-          broken: false,
+      function setCoins(amount) {
+        localStorage.setItem("bouncyBallCoins", amount);
+        document.getElementById("coinCount").textContent = amount;
+      }
+
+      function addCoins(amount) {
+        setCoins(getCoins() + amount);
+      }
+
+      function showCoinToast(msg) {
+        const toast = document.getElementById("coinToast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+      }
+
+      // =====================================================================
+      // INIT AU CHARGEMENT
+      // =====================================================================
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialiser l'affichage des pièces
+        document.getElementById("coinCount").textContent = getCoins();
+
+        // ----- Éléments DOM -----
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const winPanel = document.getElementById("winPanel");
+        const startPanel = document.getElementById("startPanel");
+        const finalTimeEl = document.getElementById("finalTime");
+        const timerEl = document.getElementById("timer");
+        const scoreEl = document.getElementById("score");
+        const bonusEl = document.getElementById("bonusDisplay");
+        const replayBtn = document.getElementById("replayBtn");
+        const startBtn = document.getElementById("startBtn");
+        const alphabetBtn = document.getElementById("alphabetBtn");
+        const soundBtn = document.getElementById("soundBtn");
+        const startSoundBtn = document.getElementById("startSoundBtn");
+        const hudEl = document.getElementById("hud");
+        const mobileCtrl = document.querySelector(".mobile-controls");
+        const leftBtn = document.getElementById("leftBtn");
+        const rightBtn = document.getElementById("rightBtn");
+        const claimRewardBtn = document.getElementById("claimRewardBtn");
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // ----- Constantes physique -----
+        const gravity = 0.12;
+        const friction = 1;
+        const initialSpeed = 7;
+        const directionAngle = 2.1;
+        const delay = 50;
+        const maxBalls = 1;
+        const nb_max_de_rbnd = 200;
+
+        // ----- État jeu -----
+        let gameStarted = false;
+        let gameWon = false;
+        let soundEnabled = true;
+        let rewardClaimed = false; // Pour éviter de réclamer plusieurs fois
+        const balls = [];
+        let particles = [];
+        let ballInterval;
+        let keys = { left: false, right: false };
+        let touchKeys = { left: false, right: false };
+
+        // =====================================================================
+        // CONTRÔLES
+        // =====================================================================
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") keys.left = true;
+          if (e.key === "ArrowRight") keys.right = true;
         });
-      }
+        document.addEventListener("keyup", (e) => {
+          if (e.key === "ArrowLeft") keys.left = false;
+          if (e.key === "ArrowRight") keys.right = false;
+        });
 
-      let keys = {
-        left: false,
-        right: false,
-      };
-
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") keys.left = true;
-        if (e.key === "ArrowRight") keys.right = true;
-      });
-
-      document.addEventListener("keyup", (e) => {
-        if (e.key === "ArrowLeft") keys.left = false;
-        if (e.key === "ArrowRight") keys.right = false;
-      });
-
-      // ===== SON =====
-      const bounceSound = new Audio("bounce.mp3");
-      bounceSound.preload = "auto";
-      bounceSound.volume = 0.3;
-
-      // ===== GRADIENT COULEURS =====
-      const gradientColors = [
-        [0, 255, 0],
-        [255, 255, 0],
-        [255, 165, 0],
-        [255, 0, 0],
-        [255, 0, 255],
-        [148, 0, 211],
-        [0, 0, 255],
-        [0, 120, 255],
-      ];
-
-      function lerpColorRGB(a, b, t) {
-        return [
-          Math.round(a[0] + (b[0] - a[0]) * t),
-          Math.round(a[1] + (b[1] - a[1]) * t),
-          Math.round(a[2] + (b[2] - a[2]) * t),
-        ];
-      }
-
-      function createBall() {
-        return {
-          x: centerX,
-          y: centerY,
-          radius: 14,
-          vx: Math.cos(directionAngle) * initialSpeed,
-          vy: Math.sin(directionAngle) * initialSpeed,
-          trail: [],
-          bounces: 0,
-          colorIndex: 0,
-          colorProgress: 0,
-          color: [...gradientColors[0]],
-        };
-      }
-
-      setInterval(() => {
-        if (balls.length < maxBalls) balls.push(createBall());
-      }, delay);
-
-      function update() {
-        // Rotation des anneaux
-        // Gestion de l'accélération
-        if (keys.left || touchKeys.left) rotationSpeed += rotationAcceleration;
-        if (keys.right || touchKeys.right)
-          rotationSpeed -= rotationAcceleration;
-
-        // Limite de vitesse
-        rotationSpeed = Math.max(
-          -maxRotationSpeed,
-          Math.min(maxRotationSpeed, rotationSpeed),
-        );
-
-        // Accélération
-        if (keys.left || touchKeys.left) rotationSpeed += rotationAcceleration;
-        if (keys.right || touchKeys.right)
-          rotationSpeed -= rotationAcceleration;
-
-        // Limite de vitesse
-        rotationSpeed = Math.max(
-          -maxRotationSpeed,
-          Math.min(maxRotationSpeed, rotationSpeed),
-        );
-        rotationSpeed *= 0.97;
-
-        if (Math.abs(rotationSpeed) < 0.0001) {
-          rotationSpeed = 0;
+        if (leftBtn && rightBtn) {
+          const ht = (e, key, state) => {
+            e.preventDefault();
+            touchKeys[key] = state;
+          };
+          leftBtn.addEventListener("touchstart", (e) => ht(e, "left", true), {
+            passive: false,
+          });
+          leftBtn.addEventListener("touchend", (e) => ht(e, "left", false));
+          leftBtn.addEventListener("touchcancel", (e) => ht(e, "left", false));
+          rightBtn.addEventListener("touchstart", (e) => ht(e, "right", true), {
+            passive: false,
+          });
+          rightBtn.addEventListener("touchend", (e) => ht(e, "right", false));
+          rightBtn.addEventListener("touchcancel", (e) =>
+            ht(e, "right", false),
+          );
         }
 
-        // Application aux anneaux
-        rings.forEach((ring) => {
-          if (!ring.broken) {
-            ring.angle += rotationSpeed;
-          }
-        });
+        // Vérification de la réponse alphabet + affichage du bouton récompense
+        document
+          .getElementById("letterInput")
+          .addEventListener("input", (e) => {
+            const resultMsg = document.getElementById("resultMsg");
+            const typed = e.target.value.toUpperCase().replace(/\s/g, "");
+            const expected = lettersHistory.join("");
 
-        balls.forEach((ball) => {
-          ball.vy += gravity;
-          ball.x += ball.vx;
-          ball.y += ball.vy;
-          ball.vx *= friction;
-          ball.vy *= friction;
+            if (typed.length < expected.length) {
+              resultMsg.style.display = "none";
+              claimRewardBtn.style.display = "none";
+              return;
+            }
 
-          const dx = ball.x - centerX;
-          const dy = ball.y - centerY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          rings.forEach((ring) => {
-            if (ring.broken) return;
-
-            if (
-              distance + ball.radius > ring.radius &&
-              distance - ball.radius < ring.radius + ringWidth
-            ) {
-              let ballAngle = Math.atan2(dy, dx);
-              if (ballAngle < 0) ballAngle += Math.PI * 2;
-
-              let gapStart = ring.angle % (Math.PI * 2);
-              if (gapStart < 0) gapStart += Math.PI * 2;
-
-              let gapEnd = gapStart + gapSize;
-
-              // Gestion correcte si l'ouverture dépasse 2π
-              let inGap = false;
-
-              if (gapEnd <= Math.PI * 2) {
-                // cas normal
-                inGap = ballAngle >= gapStart && ballAngle <= gapEnd;
-              } else {
-                // cas où l'ouverture traverse 0
-                inGap =
-                  ballAngle >= gapStart || ballAngle <= gapEnd - Math.PI * 2;
+            resultMsg.style.display = "block";
+            if (typed === expected) {
+              resultMsg.textContent = "✅ Bravo, tu as tout retenu !";
+              resultMsg.style.color = "#27ae60";
+              // Afficher le bouton récompense si pas encore réclamé
+              if (!rewardClaimed) {
+                claimRewardBtn.textContent =
+                  "🪙 Récupérer la récompense (+15 pièces)";
+                claimRewardBtn.style.display = "inline-block";
               }
-
-              if (inGap) {
-                ring.broken = true;
-                createExplosion(ring);
-                score++;
-                scoreElement.textContent = score;
-              } else {
-                const nx = dx / distance;
-                const ny = dy / distance;
-                const dot = ball.vx * nx + ball.vy * ny;
-
-                ball.vx -= 2 * dot * nx;
-                ball.vy -= 2 * dot * ny;
-
-                ball.x = centerX + nx * (ring.radius - ball.radius);
-                ball.y = centerY + ny * (ring.radius - ball.radius);
-
-                if (soundEnabled) {
-                  const soundClone = bounceSound.cloneNode();
-                  soundClone.play();
-                }
-
-                ball.colorProgress += 0.2;
-                if (ball.colorProgress >= 1) {
-                  ball.colorProgress = 0;
-                  ball.colorIndex++;
-                  if (ball.colorIndex >= gradientColors.length - 1) {
-                    ball.colorIndex = gradientColors.length - 2;
-                  }
-                }
-
-                ball.color = lerpColorRGB(
-                  gradientColors[ball.colorIndex],
-                  gradientColors[ball.colorIndex + 1],
-                  ball.colorProgress,
-                );
-              }
+            } else {
+              resultMsg.textContent = "❌ Ce n'est pas ça...";
+              resultMsg.style.color = "#e74c3c";
+              claimRewardBtn.style.display = "none";
             }
           });
 
-          // Traînée
-          ball.trail.push({ x: ball.x, y: ball.y });
-          if (ball.trail.length > 15) ball.trail.shift();
+        function flyCoins(earned, originEl) {
+          const rect = originEl.getBoundingClientRect();
+          const startX = rect.left + rect.width / 2;
+          const startY = rect.top + rect.height / 2;
+          const targetX = window.innerWidth / 2;
+          const targetY = 30;
+          const count = Math.min(earned, 10);
 
-          if (ball.bounces >= nb_max_de_rbnd) {
-            balls.splice(balls.indexOf(ball), 1);
+          for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+              const coin = document.createElement("span");
+              coin.textContent = "🪙";
+              coin.className = "flying-coin";
+              coin.style.left = startX + (Math.random() * 30 - 15) + "px";
+              coin.style.top = startY + "px";
+              coin.style.transform = "translate(-50%, -50%)";
+              document.body.appendChild(coin);
+
+              const angle = Math.random() * Math.PI * 2;
+              const burst = 40 + Math.random() * 60;
+              const ctrlX = startX + Math.cos(angle) * burst;
+              const ctrlY = startY + Math.sin(angle) * burst;
+              const duration = 600 + Math.random() * 200;
+              const startTime = performance.now();
+
+              function animateCoin(now) {
+                const t = Math.min((now - startTime) / duration, 1);
+                const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                const x =
+                  (1 - ease) * (1 - ease) * startX +
+                  2 * (1 - ease) * ease * ctrlX +
+                  ease * ease * targetX;
+                const y =
+                  (1 - ease) * (1 - ease) * startY +
+                  2 * (1 - ease) * ease * ctrlY +
+                  ease * ease * targetY;
+                const scale = 1 - ease * 0.5;
+                coin.style.left = x + "px";
+                coin.style.top = y + "px";
+                coin.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                coin.style.opacity = t > 0.8 ? 1 - (t - 0.8) / 0.2 : 1;
+                if (t < 1) {
+                  requestAnimationFrame(animateCoin);
+                } else {
+                  coin.remove();
+                }
+              }
+              requestAnimationFrame(animateCoin);
+            }, i * 80);
+          }
+        }
+
+        // Bouton récupérer la récompense
+        claimRewardBtn.addEventListener("click", () => {
+          if (!rewardClaimed) {
+            rewardClaimed = true;
+            const rewardMap = { facile: 5, moyen: 10, difficile: 20 };
+            const earned = alphabetMode
+              ? 15
+              : rewardMap[difficulty_level] || 10;
+            addCoins(earned);
+            claimRewardBtn.textContent = "✅ Récompense récupérée !";
+            claimRewardBtn.style.background = "#555";
+            claimRewardBtn.style.color = "#aaa";
+            claimRewardBtn.style.border = "2px solid #666";
+            claimRewardBtn.style.animation = "none";
+            claimRewardBtn.style.cursor = "default";
+            flyCoins(earned, claimRewardBtn);
+            showCoinToast(`🪙 +${earned} pièces ! Total : ` + getCoins());
           }
         });
-        // Mise à jour particules
-        particles.forEach((p) => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.05; // petite gravité
-          p.life--;
+
+        // =====================================================================
+        // SON
+        // =====================================================================
+
+        const bounceSound = new Audio("bounce.mp3");
+        bounceSound.preload = "auto";
+        bounceSound.volume = 0.3;
+
+        const syncSound = () => {
+          const label = `🔊 Son : ${soundEnabled ? "ON" : "OFF"}`;
+          soundBtn.textContent = startSoundBtn.textContent = label;
+        };
+        soundBtn.addEventListener("click", () => {
+          soundEnabled = !soundEnabled;
+          syncSound();
         });
-        if (!gameWon && rings.every((r) => r.broken)) {
-          gameWon = true;
-          finalTime.textContent = ((Date.now() - startTime) / 1000).toFixed(1);
-          winPanel.style.display = "block";
-        }
-        let elapsed = (Date.now() - startTime) / 1000;
-
-        if (!gameWon) {
-          timerElement.textContent = elapsed.toFixed(1);
-        } else {
-          timerElement.textContent = elapsed.toFixed(1);
-        }
-
-        particles = particles.filter((p) => p.life > 0);
-        timerElement.textContent = elapsed.toFixed(1);
-      }
-
-      function createExplosion(ring) {
-        const particleCount = 40;
-
-        for (let i = 0; i < particleCount; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 4 + 1;
-
-          particles.push({
-            x: centerX + Math.cos(angle) * ring.radius,
-            y: centerY + Math.sin(angle) * ring.radius,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 80,
-            size: Math.random() * 4 + 2,
-          });
-        }
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Dessin particules
-        particles.forEach((p) => {
-          ctx.globalAlpha = p.life / 60;
-          ctx.save();
-
-          ctx.globalAlpha = p.life / 80;
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = "white";
-
-          ctx.fillStyle = "white";
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
+        startSoundBtn.addEventListener("click", () => {
+          soundEnabled = !soundEnabled;
+          syncSound();
         });
 
-        ctx.globalAlpha = 1;
+        // =====================================================================
+        // COULEURS
+        // =====================================================================
 
-        // Dessin des anneaux
-        rings.forEach((ring) => {
-          if (ring.broken) return;
+        const gradientColors = [
+          [0, 255, 0],
+          [255, 255, 0],
+          [255, 165, 0],
+          [255, 0, 0],
+          [255, 0, 255],
+          [148, 0, 211],
+          [0, 0, 255],
+          [0, 120, 255],
+        ];
 
-          ctx.beginPath();
-          ctx.arc(
-            centerX,
-            centerY,
-            ring.radius,
-            ring.angle + gapSize,
-            ring.angle + Math.PI * 2,
+        function lerpColorRGB(a, b, t) {
+          return [
+            Math.round(a[0] + (b[0] - a[0]) * t),
+            Math.round(a[1] + (b[1] - a[1]) * t),
+            Math.round(a[2] + (b[2] - a[2]) * t),
+          ];
+        }
+
+        // =====================================================================
+        // UTILITAIRES
+        // =====================================================================
+
+        function isInArc(angle, start, end) {
+          angle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+          start = ((start % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+          end = start + (end - start);
+          if (end > Math.PI * 2)
+            return angle >= start || angle <= end - Math.PI * 2;
+          return angle >= start && angle <= end;
+        }
+
+        function generateRings() {
+          const r = [];
+          for (let i = 0; i < ringCount; i++) {
+            const hasTrap = i > 1 && Math.random() < trapProbability;
+            let trapOffset = null;
+            if (hasTrap) {
+              const minSep = gapSize * 2;
+              let offset;
+              do {
+                offset = Math.random() * Math.PI * 2;
+              } while (
+                offset < minSep ||
+                offset > Math.PI * 2 - minSep - gapSize
+              );
+              trapOffset = offset;
+            }
+            r.push({
+              radius: 150 + i * ringSpacing,
+              angle: Math.random() * Math.PI * 2,
+              trapOffset,
+              broken: false,
+            });
+          }
+          return r;
+        }
+
+        function createBall() {
+          return {
+            x: centerX,
+            y: centerY,
+            radius: 14,
+            vx: Math.cos(directionAngle) * initialSpeed,
+            vy: Math.sin(directionAngle) * initialSpeed,
+            trail: [],
+            bounces: 0,
+            colorIndex: 0,
+            colorProgress: 0,
+            color: [...gradientColors[0]],
+          };
+        }
+
+        function startBallInterval() {
+          clearInterval(ballInterval);
+          ballInterval = setInterval(() => {
+            if (balls.length < maxBalls) balls.push(createBall());
+          }, delay);
+        }
+
+        function createExplosion(ring) {
+          for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 1;
+            particles.push({
+              x: centerX + Math.cos(angle) * ring.radius,
+              y: centerY + Math.sin(angle) * ring.radius,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 80,
+              size: Math.random() * 4 + 2,
+            });
+          }
+        }
+
+        // =====================================================================
+        // GESTION DU JEU
+        // =====================================================================
+
+        function resetGame() {
+          rings = generateRings();
+          const firstRadius = rings[0].radius + ringWidth;
+          currentZoom = ((canvas.width / 2) * 0.25) / firstRadius;
+          balls.length = 0;
+          particles.length = 0;
+          score = 0;
+          scoreEl.textContent = score;
+          startTime = Date.now();
+          rotationSpeed = 0;
+          bonusActive = false;
+          bonusTimer = 0;
+          currentLetter = "";
+          lettersHistory = [];
+          letterTimer = 0;
+          currentWord = "";
+          currentWordIndex = 0;
+          gameWon = false;
+          rewardClaimed = false;
+          claimRewardBtn.style.display = "none";
+          claimRewardBtn.textContent = "🪙 Récupérer la récompense";
+          claimRewardBtn.style.background =
+            "linear-gradient(135deg, #f5a623, #f0c040, #c8860a)";
+          claimRewardBtn.style.color = "#3b1f00";
+          claimRewardBtn.style.border = "2px solid #f0c040";
+          claimRewardBtn.style.animation =
+            "pulseGold 1.5s ease-in-out infinite";
+          claimRewardBtn.style.cursor = "pointer";
+          winPanel.style.display = "none";
+        }
+
+        function startGame(withAlphabet = false) {
+          alphabetMode = withAlphabet;
+          gameStarted = true;
+          startPanel.style.display = "none";
+          hudEl.style.display = "flex";
+          canvas.style.display = "block";
+          mobileCtrl.style.display = "flex";
+          resetGame();
+          startBallInterval();
+        }
+
+        function goToMenu() {
+          gameStarted = false;
+          gameWon = false;
+          alphabetMode = false;
+          clearInterval(ballInterval);
+          balls.length = 0;
+          particles.length = 0;
+          winPanel.style.display = "none";
+          hudEl.style.display = "none";
+          canvas.style.display = "none";
+          mobileCtrl.style.display = "none";
+          startPanel.style.display = "block";
+          document.getElementById("letterInput").value = "";
+          document.getElementById("resultMsg").style.display = "none";
+          document.getElementById("alphabetChallenge").style.display = "none";
+          claimRewardBtn.style.display = "none";
+          // Mettre à jour l'affichage des pièces sur l'écran d'accueil
+          document.getElementById("coinCount").textContent = getCoins();
+        }
+
+        // =====================================================================
+        // UPDATE (delta normalisé à 60fps)
+        // =====================================================================
+
+        function update(delta) {
+          if (!gameStarted) return;
+
+          if (keys.left || touchKeys.left)
+            rotationSpeed += rotationAcceleration * 1;
+          if (keys.right || touchKeys.right)
+            rotationSpeed -= rotationAcceleration * 1;
+          rotationSpeed = Math.max(
+            -maxRotationSpeed,
+            Math.min(maxRotationSpeed, rotationSpeed),
           );
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = ringWidth;
-          ctx.stroke();
-        });
+          rotationSpeed *= Math.pow(0.97, 1);
+          if (Math.abs(rotationSpeed) < 0.0001) rotationSpeed = 0;
 
-        balls.forEach((ball) => {
-          // Traînée
-          ball.trail.forEach((pos, i) => {
-            const alpha = (i / ball.trail.length) * 0.4;
+          rings.forEach((ring) => {
+            if (!ring.broken) ring.angle += rotationSpeed * 1;
+          });
+
+          if (!bonusActive && Math.random() < probabonus * delta) {
+            bonusActive = true;
+            bonusTimer = bonusDuration;
+          }
+          if (bonusActive) {
+            bonusTimer -= delta;
+            if (bonusTimer <= 0) {
+              bonusActive = false;
+              bonusTimer = 0;
+            }
+          }
+
+          if (letterTimer > 0) letterTimer -= delta;
+
+          const visibleRings = rings.filter((r) => !r.broken);
+          if (visibleRings.length > 0) {
+            const innerRadius = visibleRings[0].radius + ringWidth;
+            const halfCanvas = canvas.width / 2;
+            const targetZoom = (halfCanvas * 0.55) / innerRadius;
+            if (targetZoom < zoomMin) {
+              currentZoom = zoomMin;
+            } else {
+              currentZoom += (targetZoom - currentZoom) * 0.02 * 1;
+            }
+          }
+
+          for (let bi = balls.length - 1; bi >= 0; bi--) {
+            const ball = balls[bi];
+            let lostGame = false;
+
+            ball.vy += gravity * 1;
+            ball.x += ball.vx * 1;
+            ball.y += ball.vy * 1;
+            ball.vx *= Math.pow(friction, 1);
+            ball.vy *= Math.pow(friction, 1);
+
+            const dx = ball.x - centerX;
+            const dy = ball.y - centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            for (const ring of rings) {
+              if (ring.broken) continue;
+              if (
+                distance + ball.radius > ring.radius &&
+                distance - ball.radius < ring.radius + ringWidth
+              ) {
+                let ballAngle = Math.atan2(dy, dx);
+                if (ballAngle < 0) ballAngle += Math.PI * 2;
+
+                const gapStart =
+                  ((ring.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                const inGap = isInArc(ballAngle, gapStart, gapStart + gapSize);
+
+                let inTrap = false;
+                if (ring.trapOffset !== null) {
+                  const trapStart =
+                    (((ring.angle + ring.trapOffset) % (Math.PI * 2)) +
+                      Math.PI * 2) %
+                    (Math.PI * 2);
+                  inTrap = isInArc(ballAngle, trapStart, trapStart + gapSize);
+                }
+
+                if (inTrap) {
+                  if (bonusActive) {
+                    const nx = dx / distance,
+                      ny = dy / distance;
+                    const dot = ball.vx * nx + ball.vy * ny;
+                    ball.vx -= 2 * dot * nx;
+                    ball.vy -= 2 * dot * ny;
+                    ball.x = centerX + nx * (ring.radius - ball.radius);
+                    ball.y = centerY + ny * (ring.radius - ball.radius);
+                  } else {
+                    lostGame = true;
+                    break;
+                  }
+                } else if (inGap) {
+                  ring.broken = true;
+                  createExplosion(ring);
+                  score++;
+                  scoreEl.textContent = score;
+                  if (alphabetMode) {
+                    const remaining = rings.filter((r) => !r.broken).length;
+                    if (remaining > 0) {
+                      if (
+                        currentWordIndex === 0 ||
+                        currentWordIndex >= currentWord.length
+                      ) {
+                        currentWord =
+                          wordList[Math.floor(Math.random() * wordList.length)];
+                        currentWordIndex = 0;
+                      }
+                      currentLetter = currentWord[currentWordIndex];
+                      currentWordIndex++;
+                      letterTimer = letterDuration;
+                      lettersHistory.push(currentLetter);
+                    }
+                  }
+                } else {
+                  const nx = dx / distance,
+                    ny = dy / distance;
+                  const dot = ball.vx * nx + ball.vy * ny;
+                  ball.vx -= 2 * dot * nx;
+                  ball.vy -= 2 * dot * ny;
+                  ball.x = centerX + nx * (ring.radius - ball.radius);
+                  ball.y = centerY + ny * (ring.radius - ball.radius);
+
+                  if (soundEnabled) bounceSound.cloneNode().play();
+
+                  ball.colorProgress += 0.2;
+                  if (ball.colorProgress >= 1) {
+                    ball.colorProgress = 0;
+                    ball.colorIndex++;
+                    if (ball.colorIndex >= gradientColors.length - 1)
+                      ball.colorIndex = gradientColors.length - 2;
+                  }
+                  ball.color = lerpColorRGB(
+                    gradientColors[ball.colorIndex],
+                    gradientColors[ball.colorIndex + 1],
+                    ball.colorProgress,
+                  );
+                }
+              }
+            }
+
+            if (lostGame) {
+              resetGame();
+              startBallInterval();
+              break;
+            }
+
+            ball.trail.push({ x: ball.x, y: ball.y });
+            if (ball.trail.length > 15) ball.trail.shift();
+            if (ball.bounces >= nb_max_de_rbnd) balls.splice(bi, 1);
+          }
+
+          particles.forEach((p) => {
+            p.x += p.vx * 1;
+            p.y += p.vy * 1;
+            p.vy += 0.05 * 1;
+            p.life -= 1;
+          });
+          particles = particles.filter((p) => p.life > 0);
+
+          if (!gameWon && rings.every((r) => r.broken)) {
+            gameWon = true;
+
+            clearInterval(ballInterval);
+            finalTimeEl.textContent = ((Date.now() - startTime) / 1000).toFixed(
+              1,
+            );
+
+            const challengeEl = document.getElementById("alphabetChallenge");
+            const resultMsg = document.getElementById("resultMsg");
+            const letterInput = document.getElementById("letterInput");
+
+            resultMsg.style.display = "none";
+            letterInput.value = "";
+            claimRewardBtn.style.display = "none";
+
+            if (alphabetMode && lettersHistory.length > 0) {
+              challengeEl.style.display = "block";
+            } else {
+              challengeEl.style.display = "none";
+            }
+
+            winPanel.style.display = "block";
+
+            if (!alphabetMode && !rewardClaimed) {
+              const rewardMap = { facile: 5, moyen: 10, difficile: 20 };
+              const earned = rewardMap[difficulty_level] || 10;
+              claimRewardBtn.textContent = `🪙 Récupérer la récompense (+${earned} pièces)`;
+              claimRewardBtn.style.display = "inline-block";
+            }
+          }
+
+          if (!gameWon)
+            timerEl.textContent = ((Date.now() - startTime) / 1000).toFixed(1);
+          bonusEl.textContent = bonusActive
+            ? `${Math.ceil(bonusTimer / 60)}s 🔵`
+            : "—";
+        }
+
+        // =====================================================================
+        // DRAW
+        // =====================================================================
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.scale(currentZoom, currentZoom);
+          ctx.translate(-centerX, -centerY);
+
+          particles.forEach((p) => {
+            ctx.save();
+            ctx.globalAlpha = p.life / 80;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "white";
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+          ctx.globalAlpha = 1;
+
+          rings.forEach((ring) => {
+            if (ring.broken) return;
+            ctx.beginPath();
+            ctx.arc(
+              centerX,
+              centerY,
+              ring.radius,
+              ring.angle + gapSize,
+              ring.angle + Math.PI * 2,
+            );
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = ringWidth;
+            ctx.stroke();
+
+            if (ring.trapOffset !== null) {
+              const trapStart = ring.angle + ring.trapOffset;
+              ctx.beginPath();
+              ctx.arc(
+                centerX,
+                centerY,
+                ring.radius,
+                trapStart,
+                trapStart + gapSize,
+              );
+              ctx.strokeStyle = "red";
+              ctx.lineWidth = ringWidth;
+              ctx.stroke();
+            }
+          });
+
+          balls.forEach((ball) => {
+            ball.trail.forEach((pos, i) => {
+              const alpha = (i / ball.trail.length) * 0.4;
+              ctx.fillStyle = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
+              ctx.beginPath();
+              ctx.arc(
+                pos.x,
+                pos.y,
+                ball.radius * (alpha * 1.2),
+                0,
+                Math.PI * 2,
+              );
+              ctx.fill();
+            });
+
+            ctx.save();
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
             ctx.fillStyle = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, ball.radius * (alpha * 1.2), 0, Math.PI * 2);
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
+
+            if (bonusActive) {
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(ball.x, ball.y, ball.radius + 8, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(5,182,255,${0.5 + 0.5 * Math.sin(Date.now() / 100)})`;
+              ctx.shadowColor = "rgb(5,182,255)";
+              ctx.lineWidth = 4;
+              ctx.shadowBlur = 20;
+              ctx.stroke();
+              ctx.restore();
+            }
           });
 
-          // Balle
-          ctx.save();
-
-          ctx.shadowBlur = 25;
-          ctx.shadowColor = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
-
-          ctx.fillStyle = `rgb(${ball.color[0]},${ball.color[1]},${ball.color[2]})`;
-          ctx.beginPath();
-          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-          ctx.fill();
-
           ctx.restore();
-        });
-      }
 
-      function animate() {
-        update();
-        draw();
+          if (alphabetMode && letterTimer > 0) {
+            const fadeDuration = 30;
+            const alpha =
+              letterTimer < fadeDuration ? letterTimer / fadeDuration : 1;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.font = "bold 200px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#ffffff";
+            ctx.shadowBlur = 0;
+            ctx.fillText(currentLetter, centerX, centerY);
+            ctx.restore();
+          }
+        }
+
+        // =====================================================================
+        // BOUCLE PRINCIPALE
+        // =====================================================================
+
+        let lastTime = 0;
+        function animate(timestamp) {
+          const delta = Math.min((timestamp - lastTime) / (1000 / 60), 3);
+          lastTime = timestamp;
+          update(delta);
+          draw();
+          requestAnimationFrame(animate);
+        }
+
+        // =====================================================================
+        // ÉVÉNEMENTS
+        // =====================================================================
+
+        document.querySelectorAll(".diffBtn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            difficulty_level = btn.dataset.level;
+            if (difficulty_level === "facile") {
+              ringCount = 6;
+              gapSize = Math.PI / 4;
+              trapProbability = 0.2;
+            } else if (difficulty_level === "moyen") {
+              ringCount = 10;
+              gapSize = Math.PI / 6;
+              trapProbability = 0.5;
+            } else if (difficulty_level === "difficile") {
+              ringCount = 12;
+              gapSize = Math.PI / 10;
+              trapProbability = 0.8;
+            }
+            startGame(false);
+          });
+        });
+
+        startBtn.addEventListener("click", () => startGame(false));
+
+        alphabetBtn.addEventListener("click", () => {
+          difficulty_level = "facile";
+          ringCount = 7;
+          gapSize = Math.PI / 4;
+          trapProbability = 0.2;
+          startGame(true);
+        });
+
+        replayBtn.addEventListener("click", goToMenu);
+
         requestAnimationFrame(animate);
-      }
-
-      animate();
-      replayBtn.addEventListener("click", () => {
-        // Reset des anneaux
-        rings.forEach((ring, i) => {
-          ring.broken = false;
-          ring.angle = Math.random() * Math.PI * 2;
-        });
-
-        // Reset des balles
-        balls.length = 0;
-
-        // Reset particules
-        particles.length = 0;
-
-        // Reset score et chrono
-        score = 0;
-        scoreElement.textContent = score;
-        startTime = Date.now();
-        gameWon = false;
-
-        // Cacher le panneau
-        winPanel.style.display = "none";
       });
     </script>
   </body>
