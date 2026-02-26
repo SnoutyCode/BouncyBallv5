@@ -66,6 +66,8 @@
         box-sizing: border-box;
         pointer-events: none;
         z-index: 1000;
+        touch-action: none;
+        user-select: none;
       }
       .mobile-btn {
         pointer-events: auto;
@@ -328,13 +330,22 @@
         opacity: 1;
       }
 
-      @media (max-width: 480px) {
-        .mobile-btn {
-          width: 110px;
-          height: 110px;
+      /* Cache les contrôles par défaut sur ordinateur */
+      .mobile-controls {
+        display: none;
+      }
+
+      /* Affiche uniquement sur les appareils tactiles (smartphones/tablettes) */
+      @media (pointer: coarse) {
+        .mobile-controls {
+          display: flex;
         }
-        #hud {
-          font-size: 20px;
+
+        /* Ajustement de la taille pour les petits écrans */
+        .mobile-btn {
+          width: 100px;
+          height: 100px;
+          font-size: 40px;
         }
       }
     </style>
@@ -354,7 +365,7 @@
     </div>
 
     <!-- Contrôles mobiles -->
-    <div class="mobile-controls" style="display: none">
+    <div class="mobile-controls">
       <button id="leftBtn" class="mobile-btn">◀</button>
       <button id="rightBtn" class="mobile-btn">▶</button>
     </div>
@@ -874,8 +885,12 @@
           hudEl.style.display = "flex";
           canvas.style.display = "block";
           const isTouch =
-            navigator.maxTouchPoints > 0 || "ontouchstart" in window;
-          mobileCtrl.style.display = isTouch ? "flex" : "none";
+            "ontouchstart" in window || navigator.maxTouchPoints > 0;
+          if (isTouch) {
+            mobileCtrl.style.display = "flex";
+          } else {
+            mobileCtrl.style.display = "none";
+          }
           resetGame();
           startBallInterval();
         }
