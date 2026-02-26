@@ -365,7 +365,7 @@
     </div>
 
     <!-- Contrôles mobiles -->
-    <div class="mobile-controls">
+    <div class="mobile-controls" style="display: none">
       <button id="leftBtn" class="mobile-btn">◀</button>
       <button id="rightBtn" class="mobile-btn">▶</button>
     </div>
@@ -1235,7 +1235,7 @@
 
         let lastTime = 0;
         function animate(timestamp) {
-          const delta = Math.min((timestamp - lastTime) / (1000 / 60), 3);
+          const delta = 1;
           lastTime = timestamp;
           update(delta);
           draw();
