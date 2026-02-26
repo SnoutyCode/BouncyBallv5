@@ -16,7 +16,7 @@
         -webkit-user-select: none;
         user-select: none;
         -webkit-touch-callout: none;
-        touch-action: none;
+        touch-action: manipulation;
       }
       canvas {
         background: radial-gradient(circle at center, #222 0%, #000 100%);
@@ -335,11 +335,6 @@
         }
         #hud {
           font-size: 20px;
-        }
-      }
-      @media (min-width: 768px) and (hover: hover) {
-        .mobile-btn {
-          display: none;
         }
       }
     </style>
@@ -878,7 +873,9 @@
           startPanel.style.display = "none";
           hudEl.style.display = "flex";
           canvas.style.display = "block";
-          mobileCtrl.style.display = "flex";
+          const isTouch =
+            navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+          mobileCtrl.style.display = isTouch ? "flex" : "none";
           resetGame();
           startBallInterval();
         }
